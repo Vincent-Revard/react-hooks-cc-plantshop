@@ -1,10 +1,9 @@
 import PlantCard from "./PlantCard"
 
-function PlantList({renderPlants, searchQuery}) {
+function PlantList({renderPlants, searchQuery, handleDeletePlant, handleChangeEditingMode}) {
 
 
-  const plantsFiltered = renderPlants
-  .filter(renderPlant => {
+  const plantsFiltered = renderPlants.filter(renderPlant => {
     return (renderPlant.name.toLowerCase()
     .includes(searchQuery.toLowerCase()))
   })
@@ -12,7 +11,10 @@ function PlantList({renderPlants, searchQuery}) {
   const RenderFilteredPlants = plantsFiltered.map((plantFiltered => (
     <PlantCard 
     key={plantFiltered.id}
+    id={plantFiltered.id}
     {...plantFiltered}
+    handleDeletePlant={handleDeletePlant}
+    handleChangeEditingMode={handleChangeEditingMode}
     />
   )))
 

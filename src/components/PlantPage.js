@@ -1,44 +1,49 @@
-import {useEffect, useState} from "react";
-import NewPlantForm from "./NewPlantForm";
-import PlantList from "./PlantList";
-import Search from "./Search";
+import {useEffect, useState} from "react"
+import NewPlantForm from "./NewPlantForm"
+import PlantList from "./PlantList"
+import Search from "./Search"
 import { v4 as uuidv4} from "uuid"
+import { postJSON } from "./Helpers"
+import { deleteJSON } from "./Helpers"
+import { patchJSON } from "./Helpers"
 
 function PlantPage() {
   const [renderPlants, setRenderPlants] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
-  // const [inStock, setInStock] = useState(true)
   const [error, setError] = useState('')
-  // .map(plant => ({...plant, inStock: true}))
+  const [idEditingMode, setIdEditingMode] = useState(0)
+
+  const url = 'http://localhost:6001/plants/'
 
   useEffect(() => {
-    fetch('http://localhost:6001/plants')
-    .then((resp) => resp.json())
-    .then(data => setRenderPlants(data))
-    .catch(err => {
-      setError(err.message)
-    })
+    (async () => {
+      try {
+        const response = await fetch(url)
+        const data = await response.json()
+        setRenderPlants(data)
+      } catch (error) {
+        alert(error)
+      }
+    })()
   }, [])
 
+  const handleEditPlant = (plantToUpdate) => {
+    patchJSON(url, idEditingMode, plantToUpdate)
+      setRenderPlants(mostCurrentPlants => mostCurrentPlants.map(plant => plant.id === idEditingMode ? plantToUpdate : plant))
+      setIdEditingMode(0)
+      // .catch(err => {  //! This makes the form not clear ... async ?
+      //   setError(console.log(err.text))
+      //   setTimeout(() => setError(""), 5000)    
+      // })
+
+  }
+  const handleChangeEditingMode = (value) => {
+    setIdEditingMode(value)
+  }
+
   const handleAddNewPlant = (formData) => {
-    fetch("http://localhost:6001/plants", {
-      method: "POST",
-      headers: {
-        "Content-Type": "Application/JSON"
-      },
-      body: JSON.stringify({
-        name: formData.name,
-        image: formData.image,
-        price: formData.price
-      })
-    })
-    .then(resp => {
-      // if (!resp.ok) {
-      //   throw new Error("Failed to fetch because server is not running!")
-      // }
-      return resp.json()
-    })
-    .then((addedPlant) => {
+    postJSON(url, formData)
+    .then((addedPlant) => (
       setRenderPlants((currentPlants) => {
         const lastPlantArray = currentPlants.slice(-1)
         const id = lastPlantArray.length
@@ -46,22 +51,33 @@ function PlantPage() {
         : uuidv4()
         return [...currentPlants, { id, ...addedPlant}]
       })
+    ))
+    .catch(err => {
+      setError(err.text)
+      setTimeout(() => setError(""), 5000)
+      setRenderPlants(currentPlants => currentPlants.slice(0, -1))
     })
   }
 
+  const handleDeletePlant = (id) => {
+    const elementToRemove = renderPlants.find(renderPlant => renderPlant.id === id)
+    setRenderPlants((currentRenderPlants) => currentRenderPlants.filter((renderPlant) => renderPlant.id !== id))
+    deleteJSON(url, id)
+      .catch((err) => {
+        alert(err)
+        setRenderPlants(currentPlants => [...currentPlants, elementToRemove])
+      }) 
+  }
+  
   const handleSearch = (e) => {
     setSearchQuery(e.target.value)
   }
 
-  // const handleSwitchInStockButton = () => {
-  //   setInStock(currentStockValue => !currentStockValue)
-  // }
-  // handleSwitchInStockButton={handleSwitchInStockButton} inStock={inStock}
   return (
     <main> {error? alert(error) : null }
-      <NewPlantForm handleAddNewPlant={handleAddNewPlant}/>
+      <NewPlantForm handleAddNewPlant={handleAddNewPlant} idEditingMode={idEditingMode} handleEditPlant={handleEditPlant} handleChangeEditingMode={handleChangeEditingMode} />
       <Search searchQuery={searchQuery} handleSearch={handleSearch}/>
-      <PlantList renderPlants={renderPlants} searchQuery={searchQuery}/>
+      <PlantList renderPlants={renderPlants} searchQuery={searchQuery} handleDeletePlant={handleDeletePlant} handleChangeEditingMode={handleChangeEditingMode}/>
     </main>
   );
 }

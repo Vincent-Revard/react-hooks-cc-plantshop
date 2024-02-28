@@ -1,5 +1,4 @@
 
-
 function Search({searchQuery, handleSearch}) {
   return (
     <div className="searchbar">

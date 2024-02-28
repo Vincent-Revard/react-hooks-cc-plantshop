@@ -1,6 +1,6 @@
 import {useState} from "react"
 
-function PlantCard({name, image, price}) {
+function PlantCard({name, image, price, id, handleDeletePlant, handleChangeEditingMode}) {
   const [inStock, setInStock] = useState(true)
 
   const handleClickInStock = () => setInStock(!inStock)
@@ -15,6 +15,8 @@ function PlantCard({name, image, price}) {
       ) : (
         <button>Out of Stock</button>
       )}
+      <button onClick={() => handleDeletePlant(id)}>Delete Plant Card</button>
+      <button onClick={() => handleChangeEditingMode(id, name, price, image)}>Update The Plant Details</button>
     </li>
   );
 }

@@ -1,11 +1,49 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { object, string } from 'yup';
+import { Formik } from 'formik';
 
-function NewPlantForm({handleAddNewPlant}) {
+
+const URL = 'http://localhost:6001/plants'
+
+function NewPlantForm({handleAddNewPlant , idEditingMode, handleEditPlant }) {
   const [formData, setFormData] = useState({
     name: '',
     image: '',
     price: '',
   })
+  const [error, setError] = useState("")
+  const [formErrors, setFormErrors] = useState({})
+
+  const plantSchema = object().shape({
+    name: string().required('Name is required!'),
+    image: string().required('Image is required!'),
+    price: string().required('Price is required!')
+  })
+
+  useEffect(() => {
+    if (idEditingMode) {
+      fetch(`${URL}/${idEditingMode}`)
+      .then(resp => resp.json())
+        .then(data => {
+          setFormData(data)
+        })
+      .catch(err => alert(err))
+    }
+  }, [idEditingMode])
+
+  const validateForm = async () => {
+    try {
+      await plantSchema.validate(formData, { abortEarly: false });
+      setFormErrors({});
+    } catch (validationError) {
+      const errors = {};
+      validationError.inner.forEach((e) => {
+        errors[e.path] = e.message;
+      });
+      setFormErrors(errors)
+      setTimeout(() => setFormErrors(""), 5000)
+    }
+  }
 
   const handleFormInputs = (e) => {
     setFormData({
@@ -16,26 +54,52 @@ function NewPlantForm({handleAddNewPlant}) {
 
   const handleAddPlantFormSubmit = (e) => {
     e.preventDefault()
-    handleAddNewPlant(formData)
-    setFormData({
-      name: '',
-      image: '',
-      price: '',
+    validateForm(formData)
+    plantSchema.validate(formData)
+    .then(validFormData => {(idEditingMode)? handleEditPlant(validFormData) : handleAddNewPlant(formData)
+        setFormData({
+            name: '',
+            image: '',
+            price: '',
+        })
+  //     if (idEditingMode) {
+  //       handleEditPlant(formData)
+  //       setFormData({
+  //           name: '',
+  //           image: '',
+  //           price: '',
+  // })
+  //     }else {
+  //       handleAddNewPlant(formData)
+  //       setFormData({
+  //           name: '',
+  //           image: '',
+  //           price: '',
+  //         })
+  //     }
     })
-  }
+}
 
 
   return (
+
+    
+
     <div className="new-plant-form">
-      <h2>New Plant</h2>
-      {/* Test would not pass with onChange on the form line where I wanted it */}
+      {error ? <p className="error-message red">{error}</p> : null}
+      <h2>{idEditingMode ? "Update Existing" : "Add New"} Plant</h2>
+      {/* //!Test would not pass with onChange on the form line where I wanted it */}
       <form onSubmit={handleAddPlantFormSubmit}>
         <input type="text" name="name" value={formData.name} placeholder="Plant name" onChange={handleFormInputs}/>
+        {formErrors.name && <span className="error-message red">{formErrors.name}</span>}
         <input type="text" name="image" value={formData.image} placeholder="Image URL" onChange={handleFormInputs}/>
+        {formErrors.image && <span className="error-message red">{formErrors.image}</span>}
         <input type="number" name="price" step="0.01" value={formData.price} placeholder="Price" onChange={handleFormInputs}/>
-        <button type="submit">Add Plant</button>
+        {formErrors.price && <span className="error-message red">{formErrors.price}</span>}
+        <button type="submit">{idEditingMode ? "Update" : "Add"} Plant</button>
       </form>
     </div>
+
   );
 }
 
