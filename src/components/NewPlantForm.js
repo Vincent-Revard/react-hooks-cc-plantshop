@@ -53,10 +53,12 @@ function NewPlantForm({handleAddNewPlant , idEditingMode, handleEditPlant }) {
   }
 
   const handleAddPlantFormSubmit = (e) => {
-    e.preventDefault()
-    validateForm(formData)
-    plantSchema.validate(formData)
-    .then(validFormData => {(idEditingMode)? handleEditPlant(validFormData) : handleAddNewPlant(formData)
+    e.preventDefault();
+    // validateForm(formData)
+    // plantSchema.validate(formData)
+    // .then(validFormData => {
+      // (idEditingMode)? handleEditPlant(formData) : 
+      handleAddNewPlant(formData)
         setFormData({
             name: '',
             image: '',
@@ -77,7 +79,7 @@ function NewPlantForm({handleAddNewPlant , idEditingMode, handleEditPlant }) {
   //           price: '',
   //         })
   //     }
-    })
+    // })
 }
 
 

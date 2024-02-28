@@ -1,9 +1,9 @@
 
 export const postJSON = (url, formData) => {
     const configObj = {
-        method: 'POST',
+        method: "POST",
         headers: {
-                'Content-Type': 'Application/JSON',
+            "Content-Type": "Application/JSON",
         },
         body: JSON.stringify({
             name: formData.name,
@@ -12,26 +12,23 @@ export const postJSON = (url, formData) => {
         })
     }
     return fetch(url, configObj)
-        .then((resp) => {
-            if (!resp.ok) {
-                throw new Error("Failed to fetch because server is not running!")
-            } 
-            return resp.json()
-            }
-        )
+        // .then((resp) => {
+        //     if (!resp.ok) {
+        //         throw new Error("Failed to fetch because server is not running!")
+        //     } 
+        //     return resp.json()
+        //     }
+        .then((resp) => resp.json())
+        // )
 }
 
 export const patchJSON = (url, idEditingMode, plantToUpdate) => {
-    fetch(`${url}${idEditingMode}`, {
+    return fetch(`${url}/${idEditingMode}`, {
         method: "PATCH",
         headers: {
                 "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-            name: plantToUpdate.name,
-            image: plantToUpdate.image,
-            price: plantToUpdate.price
-        })
+        body: JSON.stringify(plantToUpdate)
     })
         .then(resp => {
             if (!resp.ok) {
