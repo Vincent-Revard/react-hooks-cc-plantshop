@@ -1,17 +1,20 @@
-import {useEffect, useState} from "react"
+import {useEffect, useState, useCallback} from "react"
 import NewPlantForm from "./NewPlantForm"
 import PlantList from "./PlantList"
 import Search from "./Search"
-import { v4 as uuidv4} from "uuid"
-import { postJSON } from "./Helpers"
-import { deleteJSON } from "./Helpers"
-import { patchJSON } from "./Helpers"
+import { useErrorAlerts , postJSON, deleteJSON, patchJSON, addIdPlusOneLastArrayToNewElement as addId , 
+findElementToUpdate, pessimisticUpdate, pessimisticDelete } from "./Helpers"
+
+//?I just seen your post about needing to name hooks useHook.... no time to go back now ... but it is absolutely noted!
+
+const errorStyle = { color: 'red' , fontWeight: 'bold', whiteSpace: 'pre-wrap'}
 
 function PlantPage() {
-  const [renderPlants, setRenderPlants] = useState([])
+  const [plantsData, setPlantsData] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
-  const [error, setError] = useState('')
   const [idEditingMode, setIdEditingMode] = useState(0)
+  const [normalError, setNormalError] = useState('')
+  const [errorAlerts, setErrorAlerts] = useErrorAlerts('')
 
   const url = 'http://localhost:6001/plants'
 
@@ -20,90 +23,64 @@ function PlantPage() {
       try {
         const response = await fetch(url)
         const data = await response.json()
-        setRenderPlants(data)
-      } catch (error) {
-        alert(error)
+        setPlantsData(data)
+      } catch (err){
+        setNormalError(`Re-attempt Action: Process Failed.\nIssue: ${err.message}`)
+        setTimeout(() => setNormalError(''), 5000)
       }
     })()
-  }, [])
+  }, []) 
 
-  const handleEditPlant = (plantToUpdate) => {
+  // No longer afraid of the optimistic updates ... or custom helper function?
+  const handleEditPlant = useCallback((plantToUpdate) => {
+    const elementToUpdate = findElementToUpdate(plantsData, plantToUpdate) //! (currentsStateVariable, objectToUpdate)
+    setPlantsData(pessimisticUpdate(idEditingMode, plantToUpdate)) //! (selectedIdentifier, objectToUpdate)
     patchJSON(url, idEditingMode, plantToUpdate)
-    .then(updatedPlant => setRenderPlants(mostCurrentPlants => mostCurrentPlants.map(plant => plant.id === idEditingMode ? updatedPlant : plant)))
-    .then(() => setIdEditingMode(0))
-      .catch(err => {  //! This makes the form not clear ... async ?
-        setError(console.log(err.text))
-        setTimeout(() => setError(""), 5000)    
+      .then(() => setIdEditingMode(0)
+      ) 
+      .catch((err) => {
+        setErrorAlerts(err)
+        setPlantsData(currentPlants => currentPlants.slice(0, -1))
+        setPlantsData(currentPlants => [...currentPlants, elementToUpdate])
+        setIdEditingMode(0)
       })
+  },[plantsData, idEditingMode, setErrorAlerts])
 
-  }
-  const handleChangeEditingMode = (value) => {
+  const handleChangeEditingMode = useCallback((value) => {
     setIdEditingMode(value)
-  }
+  },[])
 
-  const handleAddNewPlant = (formData) => {
-    // postJSON('http://localhost:6001/plants', formData)
-    // .then((addedPlant) => (
-    //   setRenderPlants((currentPlants) => {
-    //     const lastPlantArray = currentPlants.slice(-1)
-    //     const id = lastPlantArray.length
-    //     ? Number(lastPlantArray[0].id) + 1
-    //     : uuidv4()
-    //     return [...currentPlants, { id, ...addedPlant}]
-    //   })
-    // ))
-    // .catch(err => {
-    //   setError(err.text)
-    //   setTimeout(() => setError(""), 5000)
-    //   setRenderPlants(currentPlants => currentPlants.slice(0, -1))
-    // })
-    const configObj = {
-      method: "POST",
-      headers: {
-          "Content-Type": "Application/JSON",
-      },
-      body: JSON.stringify(formData)
-  }
-  return fetch(url, configObj)
-      // .then((resp) => {
-      //     if (!resp.ok) {
-      //         throw new Error("Failed to fetch because server is not running!")
-      //     } 
-      //     return resp.json()
-      //     }
-      .then((resp) => resp.json())
-      .then((addedPlant) => (
-        setRenderPlants((currentPlants) => {
-          // const lastPlantArray = currentPlants.slice(-1)
-          // const id = lastPlantArray.length
-          // ? Number(lastPlantArray[0].id) + 1
-          // : uuidv4()
-          return [...currentPlants, addedPlant]
-        })
-  ))
-}
+  const handleAddNewPlant = useCallback((formData) => {
+    setPlantsData((currentPlants) => (addId(currentPlants, formData))) //! currentStateVariable, formData
+    postJSON(url, formData)
+      .catch(err => {
+        setErrorAlerts(err)
+        setPlantsData(currentPlants => currentPlants.slice(0, -1))
+      })
+},[setErrorAlerts])
 
-  const handleDeletePlant = (id) => {
-    const elementToRemove = renderPlants.find(renderPlant => renderPlant.id === id)
-    setRenderPlants((currentRenderPlants) => currentRenderPlants.filter((renderPlant) => renderPlant.id !== id))
+  const handleDeletePlant = useCallback((id) => {
+    const elementToDeRender = findElementToUpdate(plantsData, id)
+    setPlantsData(pessimisticDelete(plantsData, id)) //! currentsStateVariable, objectToUpdate
     deleteJSON(url, id)
       .catch((err) => {
-        alert(err)
-        setRenderPlants(currentPlants => [...currentPlants, elementToRemove])
+        setErrorAlerts(err)
+        setPlantsData(currentPlants => [...currentPlants, elementToDeRender])
       }) 
-  }
+  },[setErrorAlerts, plantsData])
   
-  const handleSearch = (e) => {
+  const handleSearch = useCallback((e) => {
     setSearchQuery(e.target.value)
-  }
+  },[])
 
   return (
-    <main> {error? alert(error) : null }
+    <main>
+      <div>{errorAlerts || normalError? <p className="error-message red" style={errorStyle} >{errorAlerts}{normalError}</p> : null}</div> 
       <NewPlantForm handleAddNewPlant={handleAddNewPlant} idEditingMode={idEditingMode} handleEditPlant={handleEditPlant} handleChangeEditingMode={handleChangeEditingMode} />
       <Search searchQuery={searchQuery} handleSearch={handleSearch}/>
-      <PlantList renderPlants={renderPlants} searchQuery={searchQuery} handleDeletePlant={handleDeletePlant} handleChangeEditingMode={handleChangeEditingMode}/>
+      <PlantList plantsData={plantsData} searchQuery={searchQuery} handleDeletePlant={handleDeletePlant} handleChangeEditingMode={handleChangeEditingMode}/>
     </main>
-  );
+  )
 }
 
 export default PlantPage;

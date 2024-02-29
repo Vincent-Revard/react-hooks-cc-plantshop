@@ -1,7 +1,7 @@
 import {useState} from "react"
 
 function PlantCard({name, image, price, id, handleDeletePlant, handleChangeEditingMode}) {
-  const [inStock, setInStock] = useState(true)
+  const [inStock, setInStock] = useState(true) //! I need to move this state up so it can be sorted later 
 
   const handleClickInStock = () => setInStock(!inStock)
 

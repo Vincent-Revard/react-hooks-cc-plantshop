@@ -1,5 +1,8 @@
 
-export const postJSON = (url, formData) => {
+import { v4 as uuidv4} from "uuid"
+import { useState } from 'react';
+
+export const postJSON = async (url, formData) => {
     const configObj = {
         method: "POST",
         headers: {
@@ -11,45 +14,66 @@ export const postJSON = (url, formData) => {
             price: formData.price
         })
     }
-    return fetch(url, configObj)
-        // .then((resp) => {
-        //     if (!resp.ok) {
-        //         throw new Error("Failed to fetch because server is not running!")
-        //     } 
-        //     return resp.json()
-        //     }
-        .then((resp) => resp.json())
-        // )
+    const resp = await fetch(url, configObj);
+    if (!resp.ok) {
+        throw new Error("Failed to fetch because server is not running!");
+    }
+    return await resp.json();
 }
 
-export const patchJSON = (url, idEditingMode, plantToUpdate) => {
-    return fetch(`${url}/${idEditingMode}`, {
+export const patchJSON = async (url, idEditingMode, plantToUpdate) => {
+    const resp = await fetch(`${url}/${idEditingMode}`, {
         method: "PATCH",
         headers: {
-                "Content-Type": "application/json"
+            "Content-Type": "application/json"
         },
         body: JSON.stringify(plantToUpdate)
-    })
-        .then(resp => {
-            if (!resp.ok) {
-                throw new Error("Failed to fetch because server is not running")
-            }else{
-                return resp.json()
-            }
-        })
+    });
+    if (!resp.ok) {
+        throw new Error("Failed to fetch because server is not running");
+    }
+    return await resp.json();
 }
 
-export const deleteJSON = (url, id) => {
-    fetch(`${url}${id}`, {
+export const deleteJSON = async (url, id) => {
+    const resp = await fetch(`${url}/${id}`, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json'
         }
-    })
-    .then((resp) => {
-        if (!resp.ok) {
-            throw new Error('Failed to delete question')
-        }
-        return resp.json()
-    })
+    });
+    if (!resp.ok) {
+        throw new Error('Failed to delete question');
+    }
+    return await resp.json();
 }
+
+export const addIdPlusOneLastArrayToNewElement = (currentStateVariable, formData) => {
+    const lastVariableArray = currentStateVariable.slice(-1)
+    const id = lastVariableArray.length
+    ? Number(lastVariableArray[0].id) + 1
+    : uuidv4()
+    return [...currentStateVariable, { id, ...formData}]
+}
+
+export const pessimisticUpdate = (selectedIdentifier, objectToUpdate) => (mostCurrentStateObject => mostCurrentStateObject.map(object => object.id === selectedIdentifier ? objectToUpdate : object))
+
+
+export const findElementToUpdate = (currentsStateVariable, objectToUpdate) => {
+    const elementToUpdate = (currentsStateVariable.find(currentStateVariable => currentStateVariable.id === objectToUpdate))
+    return [elementToUpdate]
+}
+
+export const pessimisticDelete = (currentsStateVariable, id) => {
+    const elementToDelete = currentsStateVariable.filter((currentStateVariable) => currentStateVariable.id !== id)
+    return elementToDelete
+}
+
+export const useErrorAlerts = () => {
+    const [error, setError] = useState('')
+    const includeErrorAlerts = (err) => {
+        setError(`Re-attempt Action: Process Failed.\nIssue: ${err.message}`)
+        setTimeout(() => setError(''), 5000)
+        }
+        return [error, includeErrorAlerts]
+};

@@ -1,16 +1,19 @@
 import { useEffect, useState } from "react";
 import { object, string } from 'yup';
-import { Formik } from 'formik';
-
+// import { Formik } from 'formik'; //! I deeply regret not using this and forgetting it was out there while doing YUP.
 
 const URL = 'http://localhost:6001/plants'
 
+const initialState = {
+  name: '',
+  image: '',
+  price: '',
+}
+const errorStyle = { color: 'red' , fontWeight: 'bold'}
+
 function NewPlantForm({handleAddNewPlant , idEditingMode, handleEditPlant }) {
-  const [formData, setFormData] = useState({
-    name: '',
-    image: '',
-    price: '',
-  })
+  const [formData, setFormData] = useState(initialState)
+
   const [error, setError] = useState("")
   const [formErrors, setFormErrors] = useState({})
 
@@ -41,7 +44,7 @@ function NewPlantForm({handleAddNewPlant , idEditingMode, handleEditPlant }) {
         errors[e.path] = e.message;
       });
       setFormErrors(errors)
-      setTimeout(() => setFormErrors(""), 5000)
+      setTimeout(() => setFormErrors(''), 5000)
     }
   }
 
@@ -54,50 +57,33 @@ function NewPlantForm({handleAddNewPlant , idEditingMode, handleEditPlant }) {
 
   const handleAddPlantFormSubmit = (e) => {
     e.preventDefault();
-    // validateForm(formData)
-    // plantSchema.validate(formData)
-    // .then(validFormData => {
-      // (idEditingMode)? handleEditPlant(formData) : 
-      handleAddNewPlant(formData)
-        setFormData({
-            name: '',
-            image: '',
-            price: '',
-        })
-  //     if (idEditingMode) {
-  //       handleEditPlant(formData)
-  //       setFormData({
-  //           name: '',
-  //           image: '',
-  //           price: '',
-  // })
-  //     }else {
-  //       handleAddNewPlant(formData)
-  //       setFormData({
-  //           name: '',
-  //           image: '',
-  //           price: '',
-  //         })
-  //     }
-    // })
+    validateForm(formData)
+    plantSchema.validate(formData)
+    .then(validFormData => (idEditingMode)? handleEditPlant(validFormData) : handleAddNewPlant(formData))
+
+    .then(() => {
+      setFormData(initialState)})
+    
+    .catch(err => {
+        setError('Add/Update Did not work! : ' + err.message)
+        setTimeout(() => setError(''), 6000);
+    })
 }
 
-
   return (
-
     
 
     <div className="new-plant-form">
-      {error ? <p className="error-message red">{error}</p> : null}
+      {error ? <p className="error-message red" style={errorStyle} >{error}</p> : null}
       <h2>{idEditingMode ? "Update Existing" : "Add New"} Plant</h2>
-      {/* //!Test would not pass with onChange on the form line where I wanted it */}
-      <form onSubmit={handleAddPlantFormSubmit}>
-        <input type="text" name="name" value={formData.name} placeholder="Plant name" onChange={handleFormInputs}/>
-        {formErrors.name && <span className="error-message red">{formErrors.name}</span>}
-        <input type="text" name="image" value={formData.image} placeholder="Image URL" onChange={handleFormInputs}/>
-        {formErrors.image && <span className="error-message red">{formErrors.image}</span>}
-        <input type="number" name="price" step="0.01" value={formData.price} placeholder="Price" onChange={handleFormInputs}/>
-        {formErrors.price && <span className="error-message red">{formErrors.price}</span>}
+      {/* I wanted to add onChange={handleFormInputs} directly to the form but tests were failing */}
+      <form onSubmit={handleAddPlantFormSubmit} >
+        <input type="text" name="name" value={formData.name} placeholder="Plant name"onChange={handleFormInputs}/>
+
+        <input type="text" name="image" value={formData.image} placeholder="Image URL"onChange={handleFormInputs}/>
+
+        <input type="number" name="price" step="0.01" value={formData.price} placeholder="Price"onChange={handleFormInputs}/>
+
         <button type="submit">{idEditingMode ? "Update" : "Add"} Plant</button>
       </form>
     </div>

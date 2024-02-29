@@ -1,25 +1,29 @@
 import PlantCard from "./PlantCard"
+import { useMemo } from "react"
 
-function PlantList({renderPlants, searchQuery, handleDeletePlant, handleChangeEditingMode}) {
+function PlantList({plantsData, searchQuery, handleDeletePlant, handleChangeEditingMode}) {
 
-
-  const plantsFiltered = renderPlants.filter(renderPlant => {
+  const renderPlants = useMemo(() => plantsData
+    .filter(renderPlant => {
     return (renderPlant.name.toLowerCase()
-    .includes(searchQuery.toLowerCase()))
-  })
-
-  const RenderFilteredPlants = plantsFiltered.map((plantFiltered => (
+    .includes(searchQuery.toLowerCase().trim
+    ()))
+    })
+    .map((plant => (
     <PlantCard 
-    key={plantFiltered.id}
-    id={plantFiltered.id}
-    {...plantFiltered}
+    key={plant.id}
+    id={plant.id}
     handleDeletePlant={handleDeletePlant}
     handleChangeEditingMode={handleChangeEditingMode}
+    {...plant}
     />
+    
   )))
+  ,[handleDeletePlant,handleChangeEditingMode, plantsData, searchQuery])
+
 
   return (
-    <ul className="cards">{RenderFilteredPlants}</ul>
+    <ul className="cards">{renderPlants}</ul>
   );
 }
 

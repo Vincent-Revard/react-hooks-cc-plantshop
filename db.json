@@ -40,43 +40,7 @@
       "id": 7,
       "name": "Fiddle Leaf Fig",
       "image": "./images/fiddle-leaf-fig.jpg",
-      "price": 55
-    },
-    {
-      "name": "Tiger Jaws Plant",
-      "image": "https://www.succulentsandsunshine.com/wp-content/uploads/2021/05/Faucaria-tigrina-Tigers-Jaw-care-and-propagation-information.jpg",
-      "price": "2000",
-      "id": 12
-    },
-    {
-      "name": "test 01",
-      "image": "https://media.istockphoto.com/id/658291850/photo/young-plant-growing-in-sunlight.jpg?s=612x612&w=0&k=20&c=ZH9gmP8dLhwNaWuVbtBz99Fkybg_B0Uanw88QXSdMnY=",
-      "price": "10",
-      "id": 13
-    },
-    {
-      "name": "test03",
-      "image": "https://www.succulentsandsunshine.com/wp-content/uploads/2021/05/Faucaria-tigrina-Tigers-Jaw-care-and-propagation-information.jpg",
-      "price": "1000",
-      "id": 14
-    },
-    {
-      "name": "test12",
-      "image": "https://media.istockphoto.com/id/658291850/photo/young-plant-growing-in-sunlight.jpg?s=612x612&w=0&k=20&c=ZH9gmP8dLhwNaWuVbtBz99Fkybg_B0Uanw88QXSdMnY=",
-      "price": "50",
-      "id": 15
-    },
-    {
-      "name": "test 01",
-      "image": "https://c8.alamy.com/comp/JEERR1/ichiraku-ramen-at-ippudo-ny-east-village-manhattan-new-york-city-JEERR1.jpg",
-      "price": "60",
-      "id": 16
-    },
-    {
-      "name": "45344323",
-      "image": "https://media.istockphoto.com/id/658291850/photo/young-plant-growing-in-sunlight.jpg?s=612x612&w=0&k=20&c=ZH9gmP8dLhwNaWuVbtBz99Fkybg_B0Uanw88QXSdMnY=",
-      "price": "500",
-      "id": 17
+      "price": "60"
     }
   ]
 }
